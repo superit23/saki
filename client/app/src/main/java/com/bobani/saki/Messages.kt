@@ -24,7 +24,7 @@ data class SAKIMessage(val id: String, val messageType: String, val data: String
 data class SAKIError(val message: String)
 
 @Serializable
-data class GenerateKeyMessage(val algorithm: String, val keyAlias: String, val purposes: Int, val keySize: Int, val digests: List<String>, val encryptionPaddings: List<String>)
+data class AlgorithmSpecMessage(val algorithm: String, val keyAlias: String, val purposes: Int, val keySize: Int, val digests: List<String>, val encryptionPaddings: List<String>)
 
 @Serializable
 data class GenerateKeyResult(val key: String)
@@ -33,10 +33,10 @@ data class GenerateKeyResult(val key: String)
 data class GetEntryMessage(val keyAlias: String)
 
 @Serializable
-data class GetEntryResult(val key: String)
+data class GetEntryResult(val key: String, val attributes: List<Pair<String, String>>)
 
 @Serializable
-data class ImportKeyMessage(val keyAlias: String, val wrappedKeyAlias: String, val wrappedKey: String, val transformation: String)
+data class ImportKeyMessage(val wrappedKeyAlias: String, val wrappedKey: String, val transformation: String, val spec: AlgorithmSpecMessage)
 
 @Serializable
 data class ImportKeyResult(val success: Boolean)

@@ -69,7 +69,7 @@ class SAKIWebSocketListener: WebSocketListener() {
 
     @SuppressLint("WrongConstant")
     fun generateKey(message: SAKIMessage): SAKIMessage {
-        val obj = Json.decodeFromString<GenerateKeyMessage>(message.data)
+        val obj = Json.decodeFromString<AlgorithmSpecMessage>(message.data)
         val keyPairGenerator = KeyPairGenerator.getInstance(obj.algorithm, "AndroidKeyStore")
 
         keyPairGenerator.initialize(
@@ -90,14 +90,17 @@ class SAKIWebSocketListener: WebSocketListener() {
         val obj = Json.decodeFromString<GetEntryMessage>(message.data)
 
         val keyStore = KeyStore.getInstance("AndroidKeyStore")
-        keyStore.load(null, null)
+        keyStore.load(null)
 
-        val entry = keyStore.getEntry(obj.keyAlias, null) as KeyStore.PrivateKeyEntry
+        val publicKey = keyStore.getCertificate(obj.keyAlias)
+
         val encoder = Base64.getEncoder()
-        val inner = GetEntryResult(encoder.encodeToString(entry.certificate.encoded))
+        val attributes = keyStore.getEntry(obj.keyAlias, null).attributes.map { Pair<String, String>(it.name, it.value) }
+        val inner = GetEntryResult(encoder.encodeToString(publicKey.encoded), attributes)
         return SAKIMessage(message.id, SAKIMessageType.GET_ENTRY_RESULT, Json.encodeToString(inner))
     }
 
+    @SuppressLint("WrongConstant")
     fun importKey(message: SAKIMessage): SAKIMessage {
         val obj = Json.decodeFromString<ImportKeyMessage>(message.data)
         val decoder = Base64.getDecoder()
@@ -107,15 +110,15 @@ class SAKIWebSocketListener: WebSocketListener() {
         keyStore.load(null, null)
 
         val spec = KeyGenParameterSpec.Builder(
-            obj.keyAlias,
+            obj.spec.keyAlias,
             KeyProperties.PURPOSE_WRAP_KEY
         )
-            .setKeySize(2048)
-            .setDigests(KeyProperties.DIGEST_SHA256, KeyProperties.DIGEST_SHA1)
-            .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_RSA_OAEP)
+            .setKeySize(obj.spec.keySize)
+            .setDigests(*obj.spec.digests.toTypedArray())
+            .setEncryptionPaddings(*obj.spec.encryptionPaddings.toTypedArray())
             .build()
 
-        val wrappedKeyEntry = WrappedKeyEntry(decodedBytes, obj.keyAlias, obj.transformation, spec)
+        val wrappedKeyEntry = WrappedKeyEntry(decodedBytes, obj.spec.keyAlias, obj.transformation, spec)
         keyStore.setEntry(obj.wrappedKeyAlias, wrappedKeyEntry, null)
 
         return SAKIMessage(message.id, SAKIMessageType.IMPORT_KEY_RESULT, Json.encodeToString(ImportKeyResult(true)))

@@ -1,9 +1,15 @@
 from enum import Enum
 from base64 import b64decode, b64encode
-from dataclasses import dataclass
-from typing import List
+from dataclasses import dataclass, asdict
+from typing import List, Tuple
 import uuid
 import json
+from json import JSONEncoder
+
+class DataClassJSONEncoder(JSONEncoder):
+        def default(self, o):
+            return asdict(o)
+
 
 class SAKIException(Exception):
     pass
@@ -33,7 +39,7 @@ class SAKIMessage(object):
     data: dict
 
     def encode(self):
-        return json.dumps(self.__dict__)
+        return json.dumps(self.__dict__, cls=DataClassJSONEncoder)
     
 
     @staticmethod
@@ -45,7 +51,7 @@ class SAKISubMessage(object):
     TYPE = None
 
     def build_message(self, id: str=None):
-        return SAKIMessage(id or str(uuid.uuid4()), self.TYPE.value, json.dumps(self.__dict__))
+        return SAKIMessage(id or str(uuid.uuid4()), self.TYPE.value, json.dumps(self.__dict__, cls=DataClassJSONEncoder))
 
 
     @staticmethod
@@ -67,21 +73,7 @@ class SAKIError(SAKISubMessage):
 
 
 @dataclass
-class ImportKeyMessage(SAKISubMessage):
-    TYPE = SAKIMessageType.IMPORT_KEY
-    keyAlias: str
-    wrappedKeyAlias: str
-    wrappedKey: str
-    transformation: str
-
-
-@dataclass
-class ImportKeyResult(SAKISubMessage):
-    TYPE = SAKIMessageType.IMPORT_KEY_RESULT
-
-
-@dataclass
-class GenerateKeyMessage(SAKISubMessage):
+class AlgorithmSpecMessage(SAKISubMessage):
     TYPE = SAKIMessageType.GENERATE_KEY
     algorithm: str
     keyAlias: str
@@ -89,6 +81,32 @@ class GenerateKeyMessage(SAKISubMessage):
     keySize: int
     digests: List[str]
     encryptionPaddings: List[str]
+
+
+@dataclass
+class ImportKeyMessage(SAKISubMessage):
+    TYPE = SAKIMessageType.IMPORT_KEY
+    wrappedKeyAlias: str
+    wrappedKey: str
+    transformation: str
+    spec: AlgorithmSpecMessage
+
+
+@dataclass
+class ImportKeyResult(SAKISubMessage):
+    TYPE = SAKIMessageType.IMPORT_KEY_RESULT
+    success: bool
+
+
+# @dataclass
+# class GenerateKeyMessage(SAKISubMessage):
+#     TYPE = SAKIMessageType.GENERATE_KEY
+#     algorithm: str
+#     keyAlias: str
+#     purposes: int
+#     keySize: int
+#     digests: List[str]
+#     encryptionPaddings: List[str]
 
 
 @dataclass
@@ -107,6 +125,7 @@ class GetEntryMessage(SAKISubMessage):
 class GetEntryResult(SAKISubMessage):
     TYPE = SAKIMessageType.GET_ENTRY_RESULT
     key: str
+    attributes: List[Tuple[str, str]]
 
 
 @dataclass

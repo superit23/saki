@@ -3,7 +3,7 @@ from websockets.sync.server import serve
 from queue import Queue, Empty
 from threading import Thread
 from time import sleep
-# from saki.messages import *
+from saki.messages import SAKIMessage, DataClassJSONEncoder
 import uuid
 import json
 
@@ -13,8 +13,8 @@ class SAKIConnection(object):
         self.thread        = None
         self.request_queue = Queue()
         self.request_map   = {}
-    
-    
+
+
     def _handle_request(self):
         try:
             (proxy_obj, msg) = self.request_queue.get(block=False)
@@ -59,7 +59,7 @@ class SAKIServer(object):
         while True:
             self.connection._handle_request()
             self.connection._handle_response()
-            sleep(0.1)
+            sleep(0.05)
 
 
     def start(self):

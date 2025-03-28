@@ -1,4 +1,4 @@
-# from saki.messages import *
+from saki.messages import *
 from queue import Queue, Empty
 import uuid
 
@@ -29,7 +29,7 @@ class KeyStore(ProxyObject):
         return self._proxy_function(ImportKeyMessage, *args, **kwargs)
 
     def generate_key(self, *args, **kwargs):
-        return self._proxy_function(GenerateKeyMessage, *args, **kwargs)
+        return self._proxy_function(AlgorithmSpecMessage, *args, **kwargs)
 
     def aliases(self, *args, **kwargs):
         return self._proxy_function(ListKeysMessage, *args, **kwargs)
