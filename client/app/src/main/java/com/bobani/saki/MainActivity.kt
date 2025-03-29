@@ -25,21 +25,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.bobani.saki.ui.theme.SAKITheme
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.text.style.TextAlign
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.WebSocket
+
 
 class MainActivity : ComponentActivity() {
-    var webSocket: WebSocket? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-//        startService(Intent(this, SAKIListenerService::class.java))
-
-        val websocketListener = SAKIWebSocketListener()
-        val client = OkHttpClient()
-        webSocket = client.newWebSocket(Request.Builder().url("ws://172.21.57.157:8765/").build(), websocketListener!!)
+        startService(Intent(this, SAKIListenerService::class.java))
 
         enableEdgeToEdge()
         setContent {

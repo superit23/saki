@@ -13,6 +13,14 @@ class SAKIMessageType {
         const val GET_ENTRY_RESULT = "getEntryResult"
         const val LIST_KEYS = "listKeys"
         const val LIST_KEYS_RESULT = "listKeysResult"
+        const val ENCRYPT_DATA = "encryptData"
+        const val ENCRYPT_DATA_RESULT = "encryptDataResult"
+        const val DECRYPT_DATA = "decryptData"
+        const val DECRYPT_DATA_RESULT = "decryptDataResult"
+        const val SIGN_DATA = "signData"
+        const val SIGN_DATA_RESULT = "signDataResult"
+        const val VERIFY_SIGNATURE = "verifySignature"
+        const val VERIFY_SIGNATURE_RESULT = "verifySignatureResult"
     }
 }
 
@@ -43,3 +51,21 @@ data class ImportKeyResult(val success: Boolean)
 
 @Serializable
 data class ListKeysResult(val keyAliases: List<String>)
+
+@Serializable
+data class EncryptDataMessage(val keyAlias: String, val transformation: String, val data: String)
+
+@Serializable
+data class EncryptDataResult(val data: String)
+
+@Serializable
+data class SignDataMessage(val keyAlias: String, val transformation: String, val data: String)
+
+@Serializable
+data class SignDataResult(val signature: String)
+
+@Serializable
+data class VerifySignatureMessage(val keyAlias: String, val transformation: String, val data: String, val signature: String)
+
+@Serializable
+data class VerifySignatureResult(val verified: Boolean)

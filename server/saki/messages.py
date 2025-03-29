@@ -1,14 +1,13 @@
 from enum import Enum
-from base64 import b64decode, b64encode
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 from typing import List, Tuple
 import uuid
 import json
 from json import JSONEncoder
 
 class DataClassJSONEncoder(JSONEncoder):
-        def default(self, o):
-            return asdict(o)
+    def default(self, o):
+        return o.__dict__
 
 
 class SAKIException(Exception):
@@ -21,16 +20,24 @@ class SAKIRemoteException(SAKIException):
     pass
 
 class SAKIMessageType(Enum):
-    ERROR               = "error"
-    IMPORT_KEY          = "importKey"
-    IMPORT_KEY_RESULT   = "importKeyResult"
-    GENERATE_KEY        = "generateKey"
-    GENERATE_KEY_RESULT = "generateKeyResult"
-    GET_ENTRY           = "getEntry"
-    GET_ENTRY_RESULT    = "getEntryResult"
-    LIST_KEYS           = "listKeys"
-    LIST_KEYS_RESULT    = "listKeysResult"
-
+    ERROR                   = "error"
+    IMPORT_KEY              = "importKey"
+    IMPORT_KEY_RESULT       = "importKeyResult"
+    GENERATE_KEY            = "generateKey"
+    GENERATE_KEY_RESULT     = "generateKeyResult"
+    GET_ENTRY               = "getEntry"
+    GET_ENTRY_RESULT        = "getEntryResult"
+    LIST_KEYS               = "listKeys"
+    LIST_KEYS_RESULT        = "listKeysResult"
+    ENCRYPT_DATA            = "encryptData"
+    ENCRYPT_DATA_RESULT     = "encryptDataResult"
+    DECRYPT_DATA            = "decryptData"
+    DECRYPT_DATA_RESULT     = "decryptDataResult"
+    SIGN_DATA               = "signData"
+    SIGN_DATA_RESULT        = "signDataResult"
+    VERIFY_SIGNATURE        = "verifySignature"
+    VERIFY_SIGNATURE_RESULT = "verifySignatureResult"
+    
 
 @dataclass
 class SAKIMessage(object):
@@ -51,7 +58,7 @@ class SAKISubMessage(object):
     TYPE = None
 
     def build_message(self, id: str=None):
-        return SAKIMessage(id or str(uuid.uuid4()), self.TYPE.value, json.dumps(self.__dict__, cls=DataClassJSONEncoder))
+        return SAKIMessage(id or str(uuid.uuid4()), self.TYPE.value, json.dumps(self, cls=DataClassJSONEncoder))
 
 
     @staticmethod
@@ -98,17 +105,6 @@ class ImportKeyResult(SAKISubMessage):
     success: bool
 
 
-# @dataclass
-# class GenerateKeyMessage(SAKISubMessage):
-#     TYPE = SAKIMessageType.GENERATE_KEY
-#     algorithm: str
-#     keyAlias: str
-#     purposes: int
-#     keySize: int
-#     digests: List[str]
-#     encryptionPaddings: List[str]
-
-
 @dataclass
 class GenerateKeyResult(SAKISubMessage):
     TYPE = SAKIMessageType.GENERATE_KEY_RESULT
@@ -137,3 +133,60 @@ class ListKeysMessage(SAKISubMessage):
 class ListKeysResult(SAKISubMessage):
     TYPE = SAKIMessageType.LIST_KEYS_RESULT
     keyAliases: List[str]
+
+
+@dataclass
+class EncryptDataMessage(SAKISubMessage):
+    TYPE = SAKIMessageType.ENCRYPT_DATA
+    keyAlias: str
+    transformation: str
+    data: str
+
+
+@dataclass
+class EncryptDataResult(SAKISubMessage):
+    TYPE = SAKIMessageType.ENCRYPT_DATA_RESULT
+    data: str
+
+
+@dataclass
+class DecryptDataMessage(SAKISubMessage):
+    TYPE = SAKIMessageType.DECRYPT_DATA
+    keyAlias: str
+    transformation: str
+    data: str
+
+
+@dataclass
+class DecryptDataResult(SAKISubMessage):
+    TYPE = SAKIMessageType.DECRYPT_DATA_RESULT
+    data: str
+
+
+@dataclass
+class SignDataMessage(SAKISubMessage):
+    TYPE = SAKIMessageType.SIGN_DATA
+    keyAlias: str
+    transformation: str
+    data: str
+
+
+@dataclass
+class SignDataResultMessage(SAKISubMessage):
+    TYPE = SAKIMessageType.SIGN_DATA_RESULT
+    signature: str
+
+
+@dataclass
+class VerifySignatureMessage(SAKISubMessage):
+    TYPE = SAKIMessageType.VERIFY_SIGNATURE
+    keyAlias: str
+    transformation: str
+    data: str
+    signature: str
+
+
+@dataclass
+class VerifySignatureResult(SAKISubMessage):
+    TYPE = SAKIMessageType.VERIFY_SIGNATURE_RESULT
+    verified: bool
